@@ -62,9 +62,50 @@ checked (bit 31 of 0x0008).
 
 ### Requirements
 
-nMigen, Icarus Verilog, Cocotb, ...
+General requirements:
+
+* Python3 (>=3.6)
+* Python3 pip
+
+To generate the Verilog code:
+
+* Yosys 0.9+
+
+To run the tests:
+
+* Icarus Verilog v10.1 (problems with v10.2+)
+* GTKWave (optional, to visualize the waveforms)
 
 
-### Run tests
+### Start
 
-`python3 -m pytest -sv nmigen_datapath_sniffer`
+(optional step) Do everything in a virtual environment:
+
+```bash
+$ python3 -m venv venv
+$ source venv/bin/activate
+```
+
+Install as a Python package:
+
+```bash
+$ pip install .
+```
+
+Run tests:
+
+```bash
+$ python3 -m pytest -sv nmigen_datapath_sniffer
+```
+
+Generate verilog:
+```bash
+$ python3 -m nmigen_datapath_sniffer.cli -w 70 -d 4 -n my_datapath_sniffer sniffer.v
+```
+
+The generated Verilog has the multiple submodules in the same `.v` file. The top module
+will be the one specified with `-n` (`-name`) in the cli parameters. In this example,
+
+```bash
+$ cat sniffer.v | grep --color -n "module my_datapath_sniffer"
+```
