@@ -1,6 +1,6 @@
 import argparse
 import re
-from .datapath_sniffer import DatapathSniffer
+from nmigen_datapath_sniffer.datapath_sniffer import DatapathSniffer
 from nmigen.hdl.ir import Fragment
 from nmigen.back import verilog
 
@@ -23,9 +23,13 @@ def main():
     fragment = Fragment.get(core, None)
     output = verilog.convert(fragment, name=args.name, ports=ports)
 
+    # to avoid submodules of different verilog files to have the same name.
+    submodule_prefix = f'_w{args.width}_d{args.depth}'
+
     with open(args.file, 'w') as f:
         output = re.sub('\*\)', '*/',re.sub('\(\*','/*', output))
         output = output.replace('__', '_')
+        output = re.sub(f'module (?!{args.name})', f'module {submodule_prefix}_', output)
         f.write(output)
 
 
