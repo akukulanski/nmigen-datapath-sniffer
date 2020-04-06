@@ -1,6 +1,6 @@
 import argparse
 import re
-from .datapath_sniffer import DatapathSniffer
+from nmigen_datapath_sniffer.datapath_sniffer import DatapathSniffer
 from nmigen.hdl.ir import Fragment
 from nmigen.back import verilog
 
@@ -20,12 +20,24 @@ def main():
     core = DatapathSniffer(width=args.width, depth=args.depth, domain_data='data', domain_axi='axi')
     ports = core.get_ports()
 
+    # to avoid submodules of different verilog files to have the same name.
+    name = args.name
+    submodule_posfix = f'_w{args.width}_d{args.depth}'
+
     fragment = Fragment.get(core, None)
-    output = verilog.convert(fragment, name=args.name, ports=ports)
+    output = verilog.convert(fragment, name=name, ports=ports)
+    output = re.sub('\*\)', '*/',re.sub('\(\*','/*', output))
+    output = output.replace('__', '_')
+
+    modules = re.findall(r'^module (\S*) ?\(.*\);', output, re.MULTILINE)
+    for m in modules:
+        pattern = m.replace('\\', '\\\\').replace('$', '\$')
+        with_posfix = m.replace('\\', '\\\\') + submodule_posfix
+        output = re.sub('^module ' + pattern, 'module ' + with_posfix, output, 0, re.MULTILINE)
+        output = re.sub('^  ' + pattern, '  ' + with_posfix, output, 0, re.MULTILINE)
+
 
     with open(args.file, 'w') as f:
-        output = re.sub('\*\)', '*/',re.sub('\(\*','/*', output))
-        output = output.replace('__', '_')
         f.write(output)
 
 
